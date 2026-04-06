@@ -221,6 +221,91 @@ body {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #c8d3dd; border-radius: 3px; }
+
+/* ─── Mobile Tab Bar (hidden on desktop) ─── */
+.tab-bar { display: none; }
+
+/* ════════════════════════════════
+   MOBILE  (≤ 768px)
+════════════════════════════════ */
+@media (max-width: 768px) {
+
+  .header { padding: 10px 16px; gap: 8px; }
+  .header h1 { font-size: 15px; }
+  .badge { display: none; }
+
+  /* Stack panels, each full-width, shown/hidden by tab */
+  .content { flex-direction: column; position: relative; overflow: hidden; }
+
+  .form-panel {
+    width: 100%;
+    border-right: none;
+    flex: 1;
+    display: none;
+  }
+  .form-panel.tab-active  { display: block; }
+
+  .preview-panel {
+    flex: 1;
+    display: none;
+  }
+  .preview-panel.tab-active { display: flex; }
+
+  /* Tighter preview padding */
+  .preview-body { padding: 20px 16px; }
+  .doc-paragraph { font-size: 13.5px; line-height: 1.95; }
+
+  /* ─── Tab Bar ─── */
+  .tab-bar {
+    display: flex;
+    flex-shrink: 0;
+    background: #1a2a4a;
+    border-top: 2px solid #2c3e5a;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 10px 8px;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.5);
+    font-size: 12px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    transition: all 0.15s;
+    letter-spacing: 0.5px;
+    border-top: 3px solid transparent;
+  }
+  .tab-btn .tab-icon { font-size: 20px; line-height: 1; }
+  .tab-btn.active {
+    color: #fff;
+    border-top-color: #3498db;
+    background: rgba(52,152,219,0.15);
+  }
+
+  /* Toast above tab bar */
+  .toast { bottom: 72px; right: 12px; font-size: 13px; padding: 8px 16px; }
+
+  /* Larger touch targets */
+  .btn { padding: 9px 16px; font-size: 14px; }
+  .btn-sm { padding: 7px 12px; font-size: 13px; }
+
+  /* Prevent iOS auto-zoom on focus */
+  .field-row input[type="text"],
+  .field-row select,
+  .field-row input[type="number"] {
+    font-size: 16px;
+    padding: 9px 10px;
+  }
+  .date-row .year-input { width: 60px; }
+  .date-row .md-input   { width: 46px; }
+  .date-row .time-input { width: 42px; }
+  .checkbox-row input[type="checkbox"] { width: 18px; height: 18px; }
+}
 </style>
 </head>
 <body>
@@ -365,9 +450,20 @@ body {
       <div class="preview-body" id="preview">
         <div class="empty-preview">填寫左側表格，起訴書內容將即時顯示於此</div>
       </div>
-    </div>
+    </div><!-- /preview-panel -->
+  </div><!-- /content -->
+
+  <!-- Mobile Tab Bar (hidden on desktop via CSS) -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tabForm" onclick="switchTab('form')">
+      <span class="tab-icon">✏️</span>填寫資料
+    </button>
+    <button class="tab-btn" id="tabPreview" onclick="switchTab('preview')">
+      <span class="tab-icon">📄</span>起訴書預覽
+    </button>
   </div>
-</div>
+
+</div><!-- /app -->
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1014,9 +1110,39 @@ function showToast(msg) {
 }
 
 // ══════════════════════════════════════════
+//  MOBILE TAB SWITCHING
+// ══════════════════════════════════════════
+function switchTab(tab) {
+  const formPanel    = document.querySelector('.form-panel');
+  const previewPanel = document.querySelector('.preview-panel');
+  const tabForm      = document.getElementById('tabForm');
+  const tabPreview   = document.getElementById('tabPreview');
+
+  if (tab === 'form') {
+    formPanel.classList.add('tab-active');
+    previewPanel.classList.remove('tab-active');
+    tabForm.classList.add('active');
+    tabPreview.classList.remove('active');
+  } else {
+    previewPanel.classList.add('tab-active');
+    formPanel.classList.remove('tab-active');
+    tabPreview.classList.add('active');
+    tabForm.classList.remove('active');
+  }
+}
+
+// On mobile, default to showing the form panel
+function initMobileLayout() {
+  if (window.innerWidth <= 768) {
+    document.querySelector('.form-panel').classList.add('tab-active');
+  }
+}
+
+// ══════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════
 render();
+initMobileLayout();
 </script>
 </body>
 </html>
