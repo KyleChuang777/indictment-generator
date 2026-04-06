@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>車手起訴書產生器</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Serif TC', 'Microsoft JhengHei', serif;
+  background: #f0f2f5;
+  color: #2c3e50;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app { display: flex; flex-direction: column; height: 100vh; }
+
+.header {
+  background: #1a2a4a;
+  color: white;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.header h1 { font-size: 18px; font-weight: 600; letter-spacing: 1px; }
+.badge {
+  background: #3498db;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-family: sans-serif;
+}
+
+.content { display: flex; flex: 1; overflow: hidden; }
+
+/* ─── Form Panel ─── */
+.form-panel {
+  width: 500px;
+  flex-shrink: 0;
+  background: #fff;
+  border-right: 1px solid #dce3ec;
+  overflow-y: auto;
+  padding-bottom: 40px;
+}
+
+.section { border-bottom: 1px solid #eaeef3; }
+
+.section-header {
+  background: #f5f7fa;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a2a4a;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-left: 4px solid #3498db;
+}
+.step-num {
+  background: #3498db; color: white;
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; flex-shrink: 0;
+}
+
+.section-body { padding: 16px 20px; }
+
+.field-row { margin-bottom: 14px; }
+.field-row label {
+  display: block; font-size: 12px; color: #546e7a;
+  margin-bottom: 5px; font-weight: 600; letter-spacing: 0.3px;
+}
+.field-row input[type="text"],
+.field-row select,
+.field-row input[type="number"] {
+  width: 100%; padding: 7px 10px;
+  border: 1px solid #d0d8e4; border-radius: 6px;
+  font-size: 14px; font-family: inherit; color: #2c3e50;
+  background: #fafbfc; transition: border-color 0.2s;
+}
+.field-row input:focus, .field-row select:focus {
+  outline: none; border-color: #3498db; background: #fff;
+}
+
+.date-row { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.date-row input[type="number"] { width: auto; padding: 7px 6px; text-align: center; }
+.date-row .year-input { width: 64px; }
+.date-row .md-input   { width: 48px; }
+.date-row .time-input { width: 44px; }
+.date-row span { font-size: 13px; color: #546e7a; }
+
+.checkbox-row {
+  display: flex; align-items: flex-start; gap: 8px;
+  margin-bottom: 10px; cursor: pointer;
+}
+.checkbox-row input[type="checkbox"] {
+  width: 16px; height: 16px; accent-color: #3498db;
+  cursor: pointer; margin-top: 2px; flex-shrink: 0;
+}
+.checkbox-row label {
+  font-size: 13px; color: #2c3e50;
+  cursor: pointer; user-select: none; line-height: 1.5;
+}
+
+.sub-field {
+  background: #f8f9fb; border: 1px solid #e8edf3;
+  border-radius: 8px; padding: 12px;
+  margin-top: 6px; margin-bottom: 8px;
+}
+
+.name-input-row {
+  display: flex; gap: 6px; margin-bottom: 6px; align-items: center;
+}
+.name-input-row input { flex: 1; }
+
+.hint-text {
+  font-size: 11px; color: #90a4ae;
+  margin-top: -6px; margin-bottom: 8px; line-height: 1.4;
+}
+
+.btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 14px; border: none; border-radius: 6px;
+  font-size: 13px; font-family: inherit; cursor: pointer;
+  font-weight: 600; transition: all 0.15s;
+}
+.btn-primary  { background: #3498db; color: white; }
+.btn-primary:hover  { background: #2980b9; }
+.btn-danger   { background: #e74c3c; color: white; }
+.btn-danger:hover   { background: #c0392b; }
+.btn-outline  { background: white; color: #3498db; border: 1px solid #3498db; }
+.btn-outline:hover  { background: #ebf5fb; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+
+.victim-card {
+  background: #f8fbff; border: 1px solid #d0e4f7;
+  border-radius: 10px; padding: 14px; margin-bottom: 14px;
+}
+.victim-card-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #d0e4f7;
+}
+.victim-card-title { font-size: 13px; font-weight: 700; color: #1a5276; }
+
+.toggle-group {
+  display: flex; border: 1px solid #d0d8e4;
+  border-radius: 6px; overflow: hidden; margin-bottom: 14px;
+}
+.toggle-btn {
+  flex: 1; padding: 8px; border: none; background: #fafbfc;
+  font-size: 13px; font-family: inherit; cursor: pointer;
+  font-weight: 600; color: #546e7a; transition: all 0.15s;
+}
+.toggle-btn.active { background: #3498db; color: white; }
+
+.failed-row {
+  background: #fff7f0; border: 1px solid #f0d0b0;
+  border-radius: 6px; padding: 8px 10px; margin-top: 6px;
+}
+.failed-row label { color: #c0392b !important; font-weight: 700 !important; }
+
+.mini-divider {
+  font-size: 11px; font-weight: 700; color: #90a4ae;
+  letter-spacing: 1px; border-top: 1px solid #e8edf3;
+  padding-top: 10px; margin-top: 4px; margin-bottom: 10px;
+}
+
+/* ─── Preview Panel ─── */
+.preview-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+.preview-header {
+  background: #f5f7fa; border-bottom: 1px solid #dce3ec;
+  padding: 10px 20px; display: flex;
+  align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+.preview-header span { font-size: 13px; font-weight: 700; color: #1a2a4a; }
+.preview-actions { display: flex; gap: 8px; }
+
+.preview-body { flex: 1; overflow-y: auto; padding: 32px 44px; background: #fff; }
+
+.doc-section-title {
+  font-size: 15px; font-weight: 700; color: #1a2a4a;
+  border-bottom: 2px solid #1a2a4a;
+  padding-bottom: 6px; margin-bottom: 18px; margin-top: 30px;
+  letter-spacing: 2px;
+}
+.doc-section-title:first-child { margin-top: 0; }
+
+.doc-paragraph {
+  font-size: 14.5px; line-height: 2.1; color: #2c3e50;
+  text-indent: 2em; margin-bottom: 16px;
+  white-space: pre-wrap; word-break: break-all;
+}
+.doc-paragraph.list-item { text-indent: 0; padding-left: 0; display: flex; gap: 0; }
+.list-num  { flex-shrink: 0; min-width: 3em; }
+.list-body { flex: 1; }
+
+.placeholder {
+  color: #e74c3c; font-style: italic;
+  background: #ffeaea; border-radius: 3px; padding: 0 2px;
+}
+
+.empty-preview { text-align: center; color: #aab; font-size: 14px; margin-top: 80px; }
+
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: #27ae60; color: white;
+  padding: 10px 20px; border-radius: 8px;
+  font-size: 14px; font-family: sans-serif; font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 999; opacity: 0; transition: opacity 0.3s;
+}
+.toast.show { opacity: 1; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #c8d3dd; border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div style="background:#3498db;color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;">⚖</div>
+    <h1>車手起訴書產生器</h1>
+    <div class="badge">起訴事實 ＋ 適用法條</div>
+  </div>
+
+  <div class="content">
+    <div class="form-panel">
+
+      <!-- Step 1 -->
+      <div class="section">
+        <div class="section-header"><div class="step-num">1</div>組織犯罪防制條例</div>
+        <div class="section-body">
+
+          <div class="checkbox-row">
+            <input type="checkbox" id="useOrgCrime" checked
+              onchange="state.useOrgCrime=this.checked; render()">
+            <label for="useOrgCrime">書寫參與犯罪組織情節</label>
+          </div>
+
+          <div id="orgCrimeFields">
+            <div class="field-row">
+              <label>被告姓名</label>
+              <input type="text" id="inp_defendant" placeholder="例：王小明"
+                oninput="state.defendant=this.value; renderPreview()">
+            </div>
+
+            <div class="field-row">
+              <label>加入犯罪組織時間（未知欄位可留空）</label>
+              <div class="date-row">
+                <input type="number" class="year-input" placeholder="年" min="100" max="130"
+                  oninput="state.joinYear=this.value; renderPreview()">
+                <span>年</span>
+                <input type="number" class="md-input" placeholder="月" min="1" max="12"
+                  oninput="state.joinMonth=this.value; renderPreview()">
+                <span>月</span>
+                <input type="number" class="md-input" placeholder="日" min="1" max="31"
+                  oninput="state.joinDay=this.value; renderPreview()">
+                <span>日</span>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label>共犯姓名</label>
+              <div class="hint-text">名稱以「　」包住，系統自動加註年籍不詳。例如輸入：「小黑」</div>
+              <div id="coSuspectList"></div>
+              <button class="btn btn-outline btn-sm" onclick="addCoSuspect()">＋ 新增共犯</button>
+            </div>
+
+            <div class="checkbox-row">
+              <input type="checkbox" id="notInScope"
+                onchange="state.notInScope=this.checked; render()">
+              <label for="notInScope">不在本案起訴範圍</label>
+            </div>
+
+            <div id="notInScopeFields" style="display:none">
+              <div class="sub-field">
+                <div class="field-row">
+                  <label>另案地檢署</label>
+                  <select onchange="state.anotherProsecutor=this.value; renderPreview()">
+                    <option value="">請選擇地檢署</option>
+                    <option>臺灣臺北地方檢察署</option>
+                    <option>臺灣新北地方檢察署</option>
+                    <option>臺灣士林地方檢察署</option>
+                    <option>臺灣桃園地方檢察署</option>
+                    <option>臺灣新竹地方檢察署</option>
+                    <option>臺灣苗栗地方檢察署</option>
+                    <option>臺灣臺中地方檢察署</option>
+                    <option>臺灣彰化地方檢察署</option>
+                    <option>臺灣南投地方檢察署</option>
+                    <option>臺灣雲林地方檢察署</option>
+                    <option>臺灣嘉義地方檢察署</option>
+                    <option>臺灣臺南地方檢察署</option>
+                    <option>臺灣高雄地方檢察署</option>
+                    <option>臺灣橋頭地方檢察署</option>
+                    <option>臺灣屏東地方檢察署</option>
+                    <option>臺灣臺東地方檢察署</option>
+                    <option>臺灣花蓮地方檢察署</option>
+                    <option>臺灣宜蘭地方檢察署</option>
+                    <option>臺灣基隆地方檢察署</option>
+                    <option>臺灣澎湖地方檢察署</option>
+                    <option>福建金門地方檢察署</option>
+                    <option>福建連江地方檢察署</option>
+                  </select>
+                </div>
+                <div class="field-row" style="margin-bottom:0">
+                  <label>另案案號</label>
+                  <input type="text" placeholder="例：113年度偵字第12345號"
+                    oninput="state.anotherCaseNum=this.value; renderPreview()">
+                </div>
+              </div>
+            </div>
+          </div><!-- /orgCrimeFields -->
+
+          <!-- fallback defendant name when step1 is unchecked -->
+          <div id="defFallbackField" style="display:none">
+            <div class="field-row">
+              <label>被告姓名</label>
+              <input type="text" placeholder="例：王小明"
+                oninput="state.defendant2=this.value; renderPreview()">
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="section">
+        <div class="section-header"><div class="step-num">2</div>犯罪事實</div>
+        <div class="section-body">
+
+          <div class="field-row">
+            <label>取款次數</label>
+            <div class="toggle-group">
+              <button class="toggle-btn active" id="toggleSingle"   onclick="setVictimMode('single')">一次</button>
+              <button class="toggle-btn"        id="toggleMultiple" onclick="setVictimMode('multiple')">多次</button>
+            </div>
+          </div>
+
+          <div id="victimList"></div>
+
+          <div id="addVictimRow" style="display:none">
+            <button class="btn btn-outline" onclick="addVictim()">＋ 新增被害人</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /form-panel -->
+
+    <!-- Preview -->
+    <div class="preview-panel">
+      <div class="preview-header">
+        <span>📄 起訴書預覽</span>
+        <div class="preview-actions">
+          <button class="btn btn-primary btn-sm" onclick="copyText()">複製全文</button>
+        </div>
+      </div>
+      <div class="preview-body" id="preview">
+        <div class="empty-preview">填寫左側表格，起訴書內容將即時顯示於此</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════
+const state = {
+  useOrgCrime: true,
+  defendant: '',
+  defendant2: '',
+  joinYear: '', joinMonth: '', joinDay: '',
+  coSuspects: [{ name: '' }],
+  notInScope: false,
+  anotherProsecutor: '',
+  anotherCaseNum: '',
+  multipleVictims: false,
+  victims: [defaultVictim()]
+};
+
+function defaultVictim(prev) {
+  return {
+    fraudYear:  prev ? prev.fraudYear  : '',
+    fraudMonth: prev ? prev.fraudMonth : '',
+    fraudDay:   prev ? prev.fraudDay   : '',
+    fraudMethod: prev ? prev.fraudMethod : 'fake_investment',
+    fraudMethodCustom: prev ? prev.fraudMethodCustom : '',
+    victimName: '',
+    victimCoSuspects: [{ name: '' }],
+    payYear:   prev ? prev.payYear   : '',
+    payMonth:  prev ? prev.payMonth  : '',
+    payDay:    prev ? prev.payDay    : '',
+    payHour:   prev ? prev.payHour   : '',
+    payMinute: prev ? prev.payMinute : '',
+    payLocation: prev ? prev.payLocation : '',
+    payAmount:   prev ? prev.payAmount   : '',
+    hasFakeReceipt: prev ? prev.hasFakeReceipt : false,
+    companyName:    prev ? prev.companyName    : '',
+    salesName:      prev ? prev.salesName      : '',
+    hasFakeID: prev ? prev.hasFakeID : false,
+    failed: false
+  };
+}
+
+// ══════════════════════════════════════════
+//  MUTATION HELPERS
+// ══════════════════════════════════════════
+function addVictim() {
+  state.victims.push(defaultVictim(state.victims[state.victims.length - 1]));
+  render();
+}
+function removeVictim(idx) {
+  if (state.victims.length <= 1) return;
+  state.victims.splice(idx, 1);
+  render();
+}
+function updateVictim(idx, key, val) {
+  state.victims[idx][key] = val;
+  if (key === 'hasFakeReceipt' || key === 'fraudMethod') { renderVictimList(); }
+  renderPreview();
+}
+function addCoSuspect() {
+  state.coSuspects.push({ name: '' });
+  renderCoSuspectList();
+  renderPreview();
+}
+function removeCoSuspect(idx) {
+  if (state.coSuspects.length <= 1) { state.coSuspects[0].name = ''; }
+  else state.coSuspects.splice(idx, 1);
+  renderCoSuspectList();
+  renderPreview();
+}
+function updateCoSuspect(idx, val) { state.coSuspects[idx].name = val; renderPreview(); }
+function addVictimCoSuspect(vi) {
+  state.victims[vi].victimCoSuspects.push({ name: '' });
+  renderVictimList(); renderPreview();
+}
+function removeVictimCoSuspect(vi, ci) {
+  const arr = state.victims[vi].victimCoSuspects;
+  if (arr.length <= 1) arr[0].name = '';
+  else arr.splice(ci, 1);
+  renderVictimList(); renderPreview();
+}
+function updateVictimCoSuspect(vi, ci, val) {
+  state.victims[vi].victimCoSuspects[ci].name = val;
+  renderPreview();
+}
+function setVictimMode(mode) {
+  state.multipleVictims = (mode === 'multiple');
+  document.getElementById('toggleSingle').classList.toggle('active', !state.multipleVictims);
+  document.getElementById('toggleMultiple').classList.toggle('active', state.multipleVictims);
+  document.getElementById('addVictimRow').style.display = state.multipleVictims ? 'block' : 'none';
+  if (!state.multipleVictims && state.victims.length > 1) state.victims = [state.victims[0]];
+  renderVictimList(); renderPreview();
+}
+
+// ══════════════════════════════════════════
+//  RENDER FORM
+// ══════════════════════════════════════════
+function render() {
+  document.getElementById('orgCrimeFields').style.display   = state.useOrgCrime ? '' : 'none';
+  document.getElementById('defFallbackField').style.display = state.useOrgCrime ? 'none' : '';
+  document.getElementById('notInScopeFields').style.display = state.notInScope ? '' : 'none';
+  document.getElementById('addVictimRow').style.display     = state.multipleVictims ? 'block' : 'none';
+  renderCoSuspectList();
+  renderVictimList();
+  renderPreview();
+}
+
+function renderCoSuspectList() {
+  const c = document.getElementById('coSuspectList');
+  if (!c) return;
+  c.innerHTML = state.coSuspects.map((s, i) => `
+    <div class="name-input-row">
+      <input type="text" value="${esc(s.name)}" placeholder="例：陳紹華 或 「小黑」"
+        oninput="updateCoSuspect(${i},this.value)">
+      <button class="btn btn-danger btn-sm" onclick="removeCoSuspect(${i})">✕</button>
+    </div>`).join('');
+}
+
+function renderVictimList() {
+  const c = document.getElementById('victimList');
+  if (!c) return;
+  c.innerHTML = state.victims.map((v, i) => buildVictimCardHTML(v, i)).join('');
+}
+
+function buildVictimCardHTML(v, i) {
+  const canRemove = state.victims.length > 1;
+  const title = state.multipleVictims ? `第 ${toFWP(i+1)} 位被害人` : '被害人資訊';
+  return `
+  <div class="victim-card">
+    <div class="victim-card-header">
+      <div class="victim-card-title">${title}</div>
+      ${canRemove ? `<button class="btn btn-danger btn-sm" onclick="removeVictim(${i})">移除</button>` : ''}
+    </div>
+
+    <div class="field-row">
+      <label>詐騙時間</label>
+      <div class="date-row">
+        <input type="number" class="year-input" placeholder="年" value="${v.fraudYear}" min="100" max="130"
+          oninput="updateVictim(${i},'fraudYear',this.value)">
+        <span>年</span>
+        <input type="number" class="md-input" placeholder="月" value="${v.fraudMonth}" min="1" max="12"
+          oninput="updateVictim(${i},'fraudMonth',this.value)">
+        <span>月</span>
+        <input type="number" class="md-input" placeholder="日" value="${v.fraudDay}" min="1" max="31"
+          oninput="updateVictim(${i},'fraudDay',this.value)">
+        <span>日</span>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <label>詐騙方式</label>
+      <select onchange="updateVictim(${i},'fraudMethod',this.value)">
+        <option value="fake_investment" ${v.fraudMethod==='fake_investment'?'selected':''}>假投資</option>
+        <option value="fake_crypto"     ${v.fraudMethod==='fake_crypto'    ?'selected':''}>佯裝兌換虛擬資產</option>
+        <option value="other"           ${v.fraudMethod==='other'          ?'selected':''}>其他（自行輸入）</option>
+      </select>
+    </div>
+    ${v.fraudMethod === 'other' ? `
+    <div class="field-row" style="margin-top:-8px">
+      <input type="text" placeholder="請輸入詐騙方式，例如：假冒金融機構客服致電" value="${esc(v.fraudMethodCustom)}"
+        oninput="updateVictim(${i},'fraudMethodCustom',this.value)">
+    </div>` : ''}
+
+    <div class="field-row">
+      <label>被害人姓名</label>
+      <input type="text" value="${esc(v.victimName)}" placeholder="例：李大華"
+        oninput="updateVictim(${i},'victimName',this.value)">
+    </div>
+
+    <div class="mini-divider">行騙者（選填）</div>
+    <div class="field-row">
+      <div class="hint-text" style="margin-top:0">名稱以「　」包住，系統自動加註年籍不詳；填入後將取代文本中「本案詐欺集團不詳成員」</div>
+      <div id="vco_${i}">
+        ${v.victimCoSuspects.map((c,ci) => `
+          <div class="name-input-row">
+            <input type="text" value="${esc(c.name)}" placeholder="例：陳紹華 或 「小黑」"
+              oninput="updateVictimCoSuspect(${i},${ci},this.value)">
+            <button class="btn btn-danger btn-sm" onclick="removeVictimCoSuspect(${i},${ci})">✕</button>
+          </div>`).join('')}
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="addVictimCoSuspect(${i})">＋ 新增</button>
+    </div>
+
+    <div class="mini-divider">交款資訊</div>
+
+    <div class="field-row">
+      <label>交款時間</label>
+      <div class="date-row">
+        <input type="number" class="year-input" placeholder="年" value="${v.payYear}" min="100" max="130"
+          oninput="updateVictim(${i},'payYear',this.value)">
+        <span>年</span>
+        <input type="number" class="md-input" placeholder="月" value="${v.payMonth}" min="1" max="12"
+          oninput="updateVictim(${i},'payMonth',this.value)">
+        <span>月</span>
+        <input type="number" class="md-input" placeholder="日" value="${v.payDay}" min="1" max="31"
+          oninput="updateVictim(${i},'payDay',this.value)">
+        <span>日</span>
+        <input type="number" class="time-input" placeholder="時" value="${v.payHour}" min="0" max="23"
+          oninput="updateVictim(${i},'payHour',this.value)">
+        <span>時</span>
+        <input type="number" class="time-input" placeholder="分" value="${v.payMinute}" min="0" max="59"
+          oninput="updateVictim(${i},'payMinute',this.value)">
+        <span>分</span>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <label>交款地點</label>
+      <input type="text" value="${esc(v.payLocation)}" placeholder="例：臺北市中正區某ATM前"
+        oninput="updateVictim(${i},'payLocation',this.value)">
+    </div>
+
+    <div class="field-row">
+      <label>交付金額（勿含「新臺幣」，如：10萬元整）</label>
+      <input type="text" value="${esc(v.payAmount)}" placeholder="例：10萬元整"
+        oninput="updateVictim(${i},'payAmount',this.value)">
+    </div>
+
+    <div class="mini-divider">偽造文書</div>
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="fr_${i}" ${v.hasFakeReceipt?'checked':''}
+        onchange="updateVictim(${i},'hasFakeReceipt',this.checked)">
+      <label for="fr_${i}">有假收據（偽造私文書）</label>
+    </div>
+    ${v.hasFakeReceipt ? `
+    <div class="sub-field">
+      <div class="field-row">
+        <label>公司名稱（請勿加引號，系統自動加）</label>
+        <input type="text" value="${esc(v.companyName)}" placeholder="例：億順投資顧問公司"
+          oninput="updateVictim(${i},'companyName',this.value)">
+      </div>
+      <div class="field-row" style="margin-bottom:0">
+        <label>業務員名稱（請勿加引號；與被告同名可留空）</label>
+        <input type="text" value="${esc(v.salesName)}" placeholder="例：陳業務"
+          oninput="updateVictim(${i},'salesName',this.value)">
+      </div>
+    </div>` : ''}
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="fi_${i}" ${v.hasFakeID?'checked':''}
+        onchange="updateVictim(${i},'hasFakeID',this.checked)">
+      <label for="fi_${i}">有假識別證（偽造特種文書）</label>
+    </div>
+
+    <div class="checkbox-row failed-row">
+      <input type="checkbox" id="fail_${i}" ${v.failed?'checked':''}
+        onchange="updateVictim(${i},'failed',this.checked)">
+      <label for="fail_${i}">本次未遂（當場被查獲）</label>
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════
+//  TEXT GENERATION
+// ══════════════════════════════════════════
+
+// Build date string; add 許 when complete (has day), 間 when incomplete
+function makeFmtDate() {
+  let firstDate = true;
+  return function(y, m, d, h, mn) {
+    const hasAny = y || m || d;
+    if (!hasAny) return null;
+    let s = '';
+    if (firstDate && y) s += '民國';
+    if (y) { firstDate = false; s += `${y}年`; }
+    if (m) s += `${m}月`;
+    if (d) {
+      s += `${d}日`;
+      if (h)  s += `${h}時`;
+      if (mn) s += `${mn}分`;
+      s += '許';
+    } else {
+      s += '間'; // no day → 間
+    }
+    return s;
+  };
+}
+
+// Prepend 新臺幣（下同） on first mention
+function makeFmtMoney() {
+  let first = true;
+  return function(amount) {
+    if (!amount || !amount.trim()) return null;
+    if (first) { first = false; return `新臺幣（下同）${amount.trim()}`; }
+    return amount.trim();
+  };
+}
+
+// Auto-detect quoted names and append 年籍不詳 annotation (first occurrence only)
+function buildCoStr(nameArr, annotatedSet) {
+  const valid = nameArr.map(n => (n || '').trim()).filter(Boolean);
+  if (!valid.length) return null;
+  const isQ = n => /^「.*」$/.test(n);
+
+  // Only annotate names not yet seen
+  const newQuoted = valid.filter(n => isQ(n) && !annotatedSet.has(n));
+  newQuoted.forEach(n => annotatedSet.add(n));
+
+  let s = valid.join('、');
+  if (!newQuoted.length) return s; // all already annotated before, no suffix needed
+
+  if (newQuoted.length === valid.length) {
+    // every name listed is a newly-seen quoted name
+    s += newQuoted.length === 1 ? '（真實姓名年籍不詳）' : '（均真實姓名年籍不詳）';
+  } else if (newQuoted.length === 1) {
+    s += `（${newQuoted[0]}真實姓名年籍不詳）`;
+  } else {
+    s += `（${newQuoted.join('、')}均真實姓名年籍不詳）`;
+  }
+  return s;
+}
+
+// Company/sales name always wrapped in 「」 for consistency
+function qCo(name) {
+  if (!name || !name.trim()) return null;
+  return `「${name.trim().replace(/^「|」$/g, '')}」`;
+}
+
+// Placeholder helper
+function ph(v, fb)  { return (v && v.trim()) ? v.trim() : `【${fb}】`; }
+function phN(v, fb) { return v ? v : `【${fb}】`; }
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function toFWP(n) { // fullwidth-paren ordinal
+  const m=['一','二','三','四','五','六','七','八','九','十','十一','十二','十三','十四','十五'];
+  return '（'+(m[n-1]||n)+'）';
+}
+
+function generateSections() {
+  const fmtDate  = makeFmtDate();
+  const fmtMoney = makeFmtMoney();
+
+  const annotatedSet = new Set(); // tracks which quoted names have been annotated
+  const def    = state.useOrgCrime ? state.defendant.trim() : state.defendant2.trim();
+  const defPh  = ph(def, '被告姓名');
+  const globalCoStr = buildCoStr(state.coSuspects.map(c => c.name), annotatedSet);
+
+  // Union of all co-suspect names across all victims (global + per-victim extras)
+  function getAllCoNames() {
+    const all = [...state.coSuspects.map(c => c.name)];
+    for (const v of state.victims) all.push(...v.victimCoSuspects.map(c => c.name));
+    return [...new Set(all.map(n => (n||'').trim()).filter(Boolean))];
+  }
+
+  const anyFakeReceipt = state.victims.some(v => v.hasFakeReceipt);
+  const anyFakeID      = state.victims.some(v => v.hasFakeID);
+  const anyFailed      = state.victims.some(v => v.failed);
+  const anyNotFailed   = state.victims.some(v => !v.failed);
+
+  // 犯意聯絡 string
+  const ip = ['三人以上共同詐欺取財'];
+  if (anyFakeReceipt) ip.push('行使偽造私文書');
+  if (anyFakeID)      ip.push('行使偽造特種文書');
+  ip.push('洗錢');
+  const intentStr = ip.slice(0,-1).join('、') + '及' + ip[ip.length-1];
+
+  const sections = [];
+
+  // ── Step 1 ──
+  if (state.useOrgCrime) {
+    const joinDate = fmtDate(state.joinYear, state.joinMonth, state.joinDay, '', '');
+    let s1 = `${defPh}基於參與犯罪組織之犯意，於${phN(joinDate,'加入時間')}，加入${ph(globalCoStr,'共犯名稱')}所組成以實施詐欺犯罪為手段，具有持續性及牟利性之有結構性組織之詐欺集團（下稱本案詐欺集團），擔任實際向被害人收取詐欺款項之車手工作`;
+    if (state.notInScope) {
+      s1 += `（此部分業經${ph(state.anotherProsecutor,'地檢署')}${ph(state.anotherCaseNum,'案號')}提起公訴，不在本案起訴範圍）`;
+    }
+    s1 += '。';
+    sections.push({ type: 'para', text: s1 });
+  }
+
+  // ── Step 2 helpers ──
+  function getVictimSubject(v) {
+    const extra  = v.victimCoSuspects.map(c => c.name);
+    const allCo  = buildCoStr([...state.coSuspects.map(c => c.name), ...extra], annotatedSet);
+    return allCo
+      ? `${defPh}、${allCo}及其等所屬本案詐欺集團不詳成年成員`
+      : `${defPh}及本案詐欺集團不詳成年成員`;
+  }
+
+  function fraudMethodText(v, victim) {
+    if (v.fraudMethod === 'fake_investment') return `以假投資方式向${victim}行騙`;
+    if (v.fraudMethod === 'fake_crypto')     return `以佯裝兌換虛擬資產方式向${victim}行騙`;
+    return v.fraudMethodCustom
+      ? `以${v.fraudMethodCustom}向${victim}行騙`
+      : `以【詐騙方式】向${victim}行騙`;
+  }
+
+  // 行騙者：use per-victim names if filled, otherwise fall back to 本案詐欺集團不詳成員
+  function getFraudActor(v) {
+    const names = v.victimCoSuspects.map(c => (c.name||'').trim()).filter(Boolean);
+    if (!names.length) return '本案詐欺集團不詳成員';
+    return buildCoStr(names, annotatedSet);
+  }
+
+  function collectionPhrase(v, victim, amount) {
+    let t = '';
+    const co = qCo(v.companyName);
+    const sa = v.salesName && v.salesName.trim() ? qCo(v.salesName) : null;
+
+    // print fake docs
+    if (v.hasFakeReceipt || v.hasFakeID) {
+      const docs = [...(v.hasFakeReceipt?['收據']:[]), ...(v.hasFakeID?['識別證']:[])];
+      t += `先列印出偽造之${docs.join('與')}，並於上開時間前往上開約定地點，`;
+    } else {
+      t += '並於上開時間前往上開約定地點，';
+    }
+
+    // collection action
+    if (v.hasFakeReceipt) {
+      const persona = sa
+        ? `${ph(co,'公司名稱')}所屬人員${sa}`
+        : `${ph(co,'公司名稱')}所屬人員`;
+      t += `佯以${persona}之名義向${victim}收款${phN(amount,'金額')}`;
+    } else {
+      t += `向${victim}收款${phN(amount,'金額')}`;
+    }
+
+    // show / hand over fake docs
+    if (v.hasFakeID && v.hasFakeReceipt) {
+      t += `，並出示上開偽造之識別證、交付上開偽造之收據予${victim}`;
+    } else if (v.hasFakeID) {
+      t += `，並出示上開偽造之識別證予${victim}`;
+    } else if (v.hasFakeReceipt) {
+      t += `，並交付上開偽造之收據予${victim}`;
+    }
+
+    // 足生損害 — only when fake docs are present
+    if (v.hasFakeReceipt || v.hasFakeID) {
+      const dmg = [];
+      if (v.hasFakeReceipt) dmg.push(ph(co, '公司名稱'));
+      dmg.push(victim);
+      if (v.hasFakeReceipt && sa && v.salesName.trim() !== (def||'').trim()) {
+        dmg.push(sa);
+      }
+      t += `，足生損害於${dmg.join('、')}`;
+    }
+
+    // failed / not failed
+    if (v.failed) {
+      t += `；惟因${victim}已發現遭詐騙，遂報警埋伏在上開地點當場查獲而未遂。`;
+    } else {
+      t += `。${defPh}取得上開贓款後，旋即依詐欺集團指示，將款項透過現金轉移方式隱匿其犯罪所得之去向；嗣經${victim}發現遭騙，報警循線查知上情。`;
+    }
+    return t;
+  }
+
+  if (!state.multipleVictims) {
+    const v = state.victims[0];
+    const victim = ph(v.victimName, '被害人');
+    const ft = fmtDate(v.fraudYear, v.fraudMonth, v.fraudDay, '', '');
+    const pt = fmtDate(v.payYear, v.payMonth, v.payDay, v.payHour, v.payMinute);
+    const am = fmtMoney(v.payAmount);
+    const subject = getVictimSubject(v); // must run first so quoted names in subject get annotated
+    const actor = getFraudActor(v);      // runs after → already-annotated names won't repeat
+    let para = `${subject}，共同意圖為自己不法之所有，基於${intentStr}之犯意聯絡，先由${actor}於${phN(ft,'詐騙時間')}，${fraudMethodText(v,victim)}，使${victim}陷於錯誤，與詐騙集團成員相約於${phN(pt,'交款時間')}，在${ph(v.payLocation,'交款地點')}面交款項。約定後，${defPh}即依指示，`;
+    para += collectionPhrase(v, victim, am);
+    sections.push({ type: 'para', text: para });
+
+  } else {
+    // Build intro subject using union of ALL co-suspects across all victims
+    const allCoStr = buildCoStr(getAllCoNames(), annotatedSet);
+    const allSub   = allCoStr
+      ? `${defPh}、${allCoStr}及其等所屬本案詐欺集團不詳成年成員`
+      : `${defPh}及本案詐欺集團不詳成年成員`;
+    const intro = `${allSub}，共同意圖為自己不法之所有，基於${intentStr}之犯意聯絡，分別為以下犯行：`;
+    const items = state.victims.map((v, i) => {
+      const victim = ph(v.victimName, '被害人');
+      const ft = fmtDate(v.fraudYear, v.fraudMonth, v.fraudDay, '', '');
+      const pt = fmtDate(v.payYear, v.payMonth, v.payDay, v.payHour, v.payMinute);
+      const am = fmtMoney(v.payAmount);
+      const actor = getFraudActor(v);
+      let text = `由${actor}於${phN(ft,'詐騙時間')}，${fraudMethodText(v,victim)}，使${victim}陷於錯誤，與詐騙集團成員相約於${phN(pt,'交款時間')}，在${ph(v.payLocation,'交款地點')}面交款項。約定後，${defPh}即依指示，`;
+      text += collectionPhrase(v, victim, am);
+      return { num: i+1, text };
+    });
+    sections.push({ type: 'multi', intro, items });
+  }
+
+  // ── Step 3 ──
+
+  // Parse amount string (free text) → number in 元; returns null if unparseable
+  function parseAmount(str) {
+    if (!str || !str.trim()) return null;
+    // Strip commas, spaces, 元, 整, 新臺幣（下同）
+    let s = str.replace(/新臺幣（下同）|,|，|整|元|約/g, '').trim();
+    // Handle 億
+    const yiMatch = s.match(/^([\d.]+)\s*億/);
+    if (yiMatch) {
+      const rest = s.replace(/^[\d.]+\s*億/, '').trim();
+      let base = parseFloat(yiMatch[1]) * 1e8;
+      const wanMatch = rest.match(/^([\d.]+)\s*萬/);
+      if (wanMatch) base += parseFloat(wanMatch[1]) * 1e4;
+      return base;
+    }
+    const wanMatch = s.match(/^([\d.]+)\s*萬/);
+    if (wanMatch) return parseFloat(wanMatch[1]) * 1e4;
+    const numMatch = s.match(/^[\d.]+/);
+    if (numMatch) return parseFloat(numMatch[0]);
+    return null;
+  }
+
+  // Check if fraud date is on or after 115/1/23 (ROC calendar)
+  function isAfterNewLaw(y, m, d) {
+    const yi = parseInt(y)||0, mi = parseInt(m)||0, di = parseInt(d)||0;
+    if (!yi) return false; // no date → assume old law
+    if (yi > 115) return true;
+    if (yi < 115) return false;
+    // yi === 115
+    if (mi > 1) return true;
+    if (mi < 1) return false;
+    // mi === 1
+    return di >= 23;
+  }
+
+  // Determine the fraud charge string for a single victim (non-failed)
+  function fraudChargeForVictim(v) {
+    if (!isAfterNewLaw(v.payYear, v.payMonth, v.payDay)) {
+      return 'old'; // 刑法第339條之4
+    }
+    const amt = parseAmount(v.payAmount);
+    if (amt === null || amt < 1e6) return 'old'; // < 100萬 → still old law
+    if (amt < 1e7)  return 'new_front';  // 100萬以上未滿1000萬
+    if (amt < 1e8)  return 'new_mid';    // 1000萬以上未滿1億
+    return 'new_rear';                   // 1億以上
+  }
+
+  const chargeTypes = {
+    old:       '刑法第339條之4第1項第2款之3人以上共同詐欺取財',
+    new_front: '詐欺犯罪危害防制條例第43條前段',
+    new_mid:   '詐欺犯罪危害防制條例第43條中段',
+    new_rear:  '詐欺犯罪危害防制條例第43條後段',
+  };
+
+  // Collect charge types from all non-failed victims; preserve insertion order
+  const seenCharges = new Set();
+  const orderedCharges = [];
+  function addCharge(key) {
+    if (!seenCharges.has(key)) { seenCharges.add(key); orderedCharges.push(key); }
+  }
+
+  for (const v of state.victims) {
+    if (!v.failed) addCharge(fraudChargeForVictim(v));
+  }
+  const hasFailed = state.victims.some(v => v.failed);
+
+  const charges = [];
+  if (state.useOrgCrime && !state.notInScope)
+    charges.push('組織犯罪防制條例第3條第1項後段之參與犯罪組織');
+  // Add fraud charges in order: old law first, then new law variants
+  for (const key of ['old','new_front','new_mid','new_rear']) {
+    if (seenCharges.has(key)) charges.push(chargeTypes[key]);
+  }
+  if (hasFailed) charges.push('刑法第339條之4第2項、第1項第2款之3人以上共同詐欺取財未遂');
+  if (anyFakeReceipt) charges.push('刑法第216條、第210條之行使偽造私文書');
+  if (anyFakeID)      charges.push('刑法第216條、第212條之行使偽造特種文書');
+  if (anyNotFailed) charges.push('洗錢防制法第19條第1項後段之一般洗錢');
+  if (hasFailed)    charges.push('洗錢防制法第19條第2項、第1項後段之一般洗錢未遂');
+
+  // Step 3: coRef = all co-suspect names (already annotated above, no repeat needed)
+  const allCoNames = getAllCoNames().join('、');
+  const coRef = allCoNames || '本案詐欺集團成員';
+  let s3 = `核被告${defPh}所為，係犯${charges.join('、')}罪嫌。`;
+  s3 += `被告與${coRef}就上開犯罪事實有犯意聯絡與行為分擔，請論以共同正犯。`;
+  if (anyFakeReceipt)
+    s3 += '被告與本案詐欺集團成員偽造印文之行為，為其等偽造私文書之部分行為；其等偽造該私文書之低度行為，亦為其等行使之高度行為所吸收，均不另論罪。';
+  s3 += '被告以一行為犯上開各罪，請依刑法第55條規定論以一罪並從一重處斷。';
+  if (state.multipleVictims && state.victims.length > 1)
+    s3 += '被告詐騙不同被害人之犯行，行為互異、侵害法益不同，請予分論併罰。';
+  sections.push({ type: 'para3', text: s3 });
+
+  return sections;
+}
+
+// ══════════════════════════════════════════
+//  RENDER PREVIEW
+// ══════════════════════════════════════════
+function renderPreview() {
+  const sections = generateSections();
+  let html = '<div class="doc-section-title">犯罪事實</div>';
+
+  for (const sec of sections) {
+    if (sec.type === 'para') {
+      html += `<div class="doc-paragraph">${hi(sec.text)}</div>`;
+    } else if (sec.type === 'multi') {
+      html += `<div class="doc-paragraph">${hi(sec.intro)}</div>`;
+      for (const item of sec.items) {
+        html += `<div class="doc-paragraph list-item">
+          <span class="list-num">${toFWP(item.num)}</span>
+          <span class="list-body">${hi(item.text)}</span>
+        </div>`;
+      }
+    } else if (sec.type === 'para3') {
+      html += '<div class="doc-section-title">所犯法條</div>';
+      html += `<div class="doc-paragraph">${hi(sec.text)}</div>`;
+    }
+  }
+  document.getElementById('preview').innerHTML = html;
+}
+
+function hi(t) {
+  return t.replace(/【([^】]+)】/g, '<span class="placeholder">【$1】</span>');
+}
+
+// ══════════════════════════════════════════
+//  COPY
+// ══════════════════════════════════════════
+function getPlainText() {
+  const I = '\u3000\u3000';
+  const secs = generateSections();
+  const lines = ['犯罪事實', ''];
+  for (const sec of secs) {
+    if (sec.type === 'para') {
+      lines.push(I + sec.text, '');
+    } else if (sec.type === 'multi') {
+      lines.push(I + sec.intro, '');
+      for (const item of sec.items) {
+        lines.push(`${toFWP(item.num)}${item.text}`, '');
+      }
+    } else if (sec.type === 'para3') {
+      lines.push('所犯法條', '', I + sec.text, '');
+    }
+  }
+  return lines.join('\n').trim();
+}
+
+async function copyText() {
+  const text = getPlainText();
+  try { await navigator.clipboard.writeText(text); }
+  catch(e) {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+  showToast('✓ 全文已複製到剪貼簿');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+render();
+</script>
+</body>
+</html>
